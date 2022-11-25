@@ -8,14 +8,35 @@ const PeopleSetcion = styled.div`
 	background-color: ${(props) => props.theme.colors.white};
 	border-radius: ${(props) => props.theme.radius.largeRadius};
 	box-shadow: 0px 5px 5px 0px ${(props) => props.theme.colors.gray500};
+	@media screen and (max-width: 640px) {
+		margin-top: -10px;
+		margin-bottom: 20px;
+	}
 `;
 
 const PeopleContainer = styled.div`
 	height: 110px;
 	border-radius: 0px 0px ${(props) => props.theme.radius.largeRadius} 10px;
 	padding: 10px;
-	overflow: scroll;
+	overflow-y: scroll;
 	font-size: ${(props) => props.theme.fontSize.xSmall};
+
+	:hover {
+		::-webkit-scrollbar {
+			width: 8px;
+		}
+
+		::-webkit-scrollbar-thumb {
+			height: 30%;
+			background: ${(props) => props.theme.colors.gray300};
+
+			border-radius: 10px;
+		}
+
+		::-webkit-scrollbar-track {
+			background: rgba(33, 122, 244, 0.1);
+		}
+	}
 `;
 
 const Person = styled.div`
@@ -24,16 +45,13 @@ const Person = styled.div`
 	border-bottom: solid 1px ${(props) => props.theme.colors.gray400};
 `;
 
-const PeoplePart = () => {
+const PeoplePart = ({ people }) => {
 	return (
 		<PeopleSetcion>
 			<PeopleContainer>
-				<Person>문지훈</Person>
-				<Person>송준모</Person>
-				<Person>홍유진</Person>
-				<Person>김아리</Person>
-				<Person>노영석</Person>
-				<Person>정경은</Person>
+				{people.map((e) => {
+					return <Person key={e.id}>{e.name}</Person>;
+				})}
 			</PeopleContainer>
 		</PeopleSetcion>
 	);

@@ -1,45 +1,57 @@
 import styled from 'styled-components';
 import { PlayListInfoProps } from '../../pages/PlayListDetail';
 import Category from '../common/Category';
-import { FaHeart } from 'react-icons/fa';
 import BookMark from '../common/BookMark';
+import { useSelector } from 'react-redux';
+import { selectBookMarkList, selectLikeList } from '../../slices/mySlice';
+import Like from '../common/Like';
 
-const PlayListInfo = ({ playListInfo }: PlayListInfoProps) => {
+const PlayListInfo = ({ playListInfo, setPlayListInfo }: PlayListInfoProps) => {
+	const likeList = useSelector(selectLikeList);
+	const bookMarkList = useSelector(selectBookMarkList);
 	return (
 		<PlayListInfoStyle>
 			<div className="info">
-				<AlbumImage>
+				<Img>
 					<img
-						src="https://t1.daumcdn.net/thumb/R720x0.fpng/?fname=http://t1.daumcdn.net/brunch/service/user/8fXh/image/0_JTh3JET7ZCHaT_IJhG4VbhEpI.png"
+						src={playListInfo.playlist[0].thumbnail}
 						alt="플레이리스트 이미지"
 					/>
-				</AlbumImage>
+				</Img>
 				<Info>
 					<div className="title">
 						{playListInfo.title}
-						<Category category={playListInfo.category}>
-							{playListInfo.category}
-						</Category>
+						<div className="categoryBox">
+							{playListInfo.categoryList &&
+								playListInfo.categoryList.map((ele, idx) => (
+									<Category key={idx} category={ele} margin="0 10px 0 0">
+										{ele}
+									</Category>
+								))}
+						</div>
 					</div>
 					<div className="options">
-						<div className="author">
-							<img
-								src="https://t1.daumcdn.net/thumb/R720x0.fpng/?fname=http://t1.daumcdn.net/brunch/service/user/8fXh/image/0_JTh3JET7ZCHaT_IJhG4VbhEpI.png"
-								alt="{playListInfo.author}"
-							/>
-							{playListInfo.author}
-						</div>
-						<div>
-							<FaHeart color="red" size="24" />
-							{playListInfo.like}
-						</div>
-						<div>
-							<BookMark />
-						</div>
+						<img
+							src="https://t1.daumcdn.net/thumb/R720x0.fpng/?fname=http://t1.daumcdn.net/brunch/service/user/8fXh/image/0_JTh3JET7ZCHaT_IJhG4VbhEpI.png"
+							alt={playListInfo.memberId}
+						/>
+						<div>{playListInfo.memberId}</div>
+						<Like
+							likeList={likeList}
+							playListId={playListInfo.playListId}
+							memberId={playListInfo.memberId}
+							setPlayListInfo={setPlayListInfo}
+						/>
+						<div>{playListInfo.like}</div>
+						<BookMark
+							bookMarkList={bookMarkList}
+							playListId={playListInfo.playListId}
+							memberId={playListInfo.memberId}
+						/>
 					</div>
 				</Info>
 			</div>
-			<div className="total">{playListInfo.total} 곡</div>
+			<div className="total">{playListInfo.playlist.length} 곡</div>
 		</PlayListInfoStyle>
 	);
 };
@@ -51,28 +63,45 @@ const PlayListInfoStyle = styled.div`
 	flex-direction: column;
 	.info {
 		display: flex;
+		justify-content: center;
+		@media (max-width: 850px) {
+			flex-direction: column;
+			align-items: center;
+		}
 	}
 	.total {
-		font-size: ${(props) => props.theme.fontSize.medium};
+		font-size: ${(props) => props.theme.fontSize.large};
 		color: ${(props) => props.theme.colors.purple};
-		margin-top: 10px;
-		margin-bottom: 10px;
+		margin-top: 20px;
+		margin-bottom: 20px;
 	}
 `;
-const AlbumImage = styled.div`
-	flex: 4;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-
+const Img = styled.span`
 	img {
-		max-width: 300px;
-		max-height: 300px;
+		width: 350px;
+		object-fit: cover;
+		@media (max-width: 850px) {
+			margin-bottom: 10px;
+		}
+		@media (max-width: 550px) {
+			width: 300px;
+		}
 	}
 `;
 const Info = styled.div`
-	padding-left: 30px;
-	flex: 6;
+	width: 500px;
+	margin-left: 3%;
+	@media (max-width: 850px) {
+		width: 400px;
+		margin-left: 0;
+
+		div {
+			margin-bottom: 10px;
+		}
+	}
+	@media (max-width: 550px) {
+		width: 300px;
+	}
 	display: flex;
 	flex-direction: column;
 	justify-content: space-around;
@@ -80,20 +109,25 @@ const Info = styled.div`
 		font-size: ${(props) => props.theme.fontSize.medium};
 	}
 	.title {
+		font-size: ${(props) => props.theme.fontSize.large};
+		line-height: 1.5;
+
+		.categoryBox {
+			margin-top: 10px;
+		}
 	}
 	.options {
 		display: flex;
 		align-items: center;
-
-		div {
-			margin-right: 20px;
+		img {
+			width: 25px;
+			margin: 0 5px;
+			border-radius: 50%;
+			object-fit: cover;
 		}
-		.author {
-			img {
-				margin: 0 5px;
-				max-width: 30px;
-				max-height: 30px;
-			}
+		div {
+			margin-left: 5px;
+			margin-right: 20px;
 		}
 	}
 `;

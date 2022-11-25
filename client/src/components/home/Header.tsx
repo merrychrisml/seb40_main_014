@@ -1,134 +1,322 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import LogoImg from '../../assets/images/header-logo.png';
-import { FaSearch } from 'react-icons/fa';
-import { useCallback, useRef, useState } from 'react';
-import LoginModal from './LoginModal';
+import { useCallback, useState, useEffect, useRef } from 'react';
+import LoginModal, { Backdrop } from './LoginModal';
+import PcUl from './PcUl';
+import MobileUl from './MobileUl';
+import { RiMenuFoldLine, RiMenuUnfoldLine } from 'react-icons/ri';
+import { useDispatch, useSelector } from 'react-redux';
+import { myLogin, myLogout, myValue } from '../../slices/mySlice';
+import { logout } from '../../api/authApi';
+import { BiUser } from 'react-icons/bi';
+import { MdLogout } from 'react-icons/md';
+import { BsFillTriangleFill } from 'react-icons/bs';
 
 function Header() {
-	const inputRef = useRef<HTMLInputElement>(null);
+	const dispatch = useDispatch();
+	const { pathname } = useLocation();
 
-	const [isOpenModal, setOpenModal] = useState<boolean>(false);
-	const [isOpenSearch, setOpenSearch] = useState<boolean>(false);
+	const { memberId, name, picture } = useSelector(myValue);
+	const isLogin = useSelector(myLogin);
+
+	useEffect(() => {
+		console.log('isLogin', isLogin);
+	}, [isLogin]);
+
+	const profileRef = useRef<HTMLDivElement>(null);
+	const profileUlRef = useRef<HTMLUListElement>(null);
+
+	const [position, setPosition] = useState('fixed');
+	const [isOpenModal, setOpenModal] = useState(false);
+	const [isOpenSide, setOpenSide] = useState(false);
+	const [currentMenu, setCurrentMenu] = useState('');
+
+	// 로그아웃
+	const handleLogout = () => {
+		logout().then((res) => {
+			console.log('logout res', res);
+			localStorage.removeItem('accessToken');
+			localStorage.removeItem('refreshToken');
+			dispatch(myLogout());
+		});
+	};
 
 	const handleOpenModal = useCallback(() => {
 		setOpenModal(!isOpenModal);
 	}, [isOpenModal]);
 
-	const handleOpenSearch = useCallback(() => {
-		setOpenSearch(!isOpenSearch);
-	}, [isOpenSearch]);
+	const handleOpenSide = useCallback(() => {
+		setOpenSide(!isOpenSide);
+	}, [isOpenSide]);
+
+	const handleOpenProfileUl = ({ target }) => {
+		if (!profileRef.current) return;
+
+		if (profileRef.current.contains(target)) {
+			profileUlRef.current.style.display = 'block';
+		} else {
+			profileUlRef.current.style.display = 'none';
+		}
+	};
+
+	useEffect(() => {
+		if (pathname === '/') setCurrentMenu('room');
+		else setCurrentMenu(pathname.slice(1));
+	}, [pathname]);
+
+	useEffect(() => {
+		window.addEventListener('mouseover', handleOpenProfileUl);
+		return () => {
+			window.removeEventListener('mouseover', handleOpenProfileUl);
+		};
+	});
+
+	useEffect(() => {
+		if (pathname.slice(0, 6) === '/rooms') {
+			setPosition('relative');
+		} else {
+			setPosition('fixed');
+		}
+	});
 
 	return (
 		<>
-			<HeaderStyle>
+			<HeaderStyle position={position}>
 				<Logo>
 					<Link to="/">
 						<img src={LogoImg} alt="logo" />
 					</Link>
 				</Logo>
-				<Ul>
-					<li>
-						<Link to="/">방</Link>
-					</li>
-					<li>
-						<Link to="/playlist">플레이리스트</Link>
-					</li>
-					<li>
-						<Link to="/ranking">랭킹</Link>
-					</li>
-					<li>
-						{isOpenSearch ? (
-							<SearchInput
-								type="text"
-								placeholder="검색어를 입력하세요"
-								ref={inputRef}
-								onBlur={handleOpenSearch}
-								autoFocus
-							/>
-						) : (
-							<SearchButton onClick={handleOpenSearch}>
-								<FaSearch className="search-icon" />
-								검색
-							</SearchButton>
-						)}
-					</li>
-				</Ul>
-				<LoginButton onClick={handleOpenModal}>
-					<Link to="/">로그인</Link>
-				</LoginButton>
+				<div className="on-pc">
+					<PcUl currentMenu={currentMenu} />
+				</div>
+				{isOpenSide && (
+					<div className="on-mobile">
+						<MobileUl
+							currentMenu={currentMenu}
+							setOpenModal={setOpenModal}
+							handleOpenSide={handleOpenSide}
+						/>
+					</div>
+				)}
+				{isLogin ? (
+					<>
+						<Profile ref={profileRef}>
+							<Img src={picture} alt="profile" />
+							<div className="on-pc">{name}</div>
+							<ProfileUl ref={profileUlRef}>
+								<Triangle>
+									<BsFillTriangleFill />
+								</Triangle>
+								<MyPageLink>
+									<Link
+										to={`/mypage/${memberId}`}
+										onClick={() => {
+											profileUlRef.current.style.display = 'none';
+										}}>
+										<BiUser />
+										<span>마이페이지</span>
+									</Link>
+								</MyPageLink>
+								<LogoutButton
+									onClick={() => {
+										handleLogout();
+										profileUlRef.current.style.display = 'none';
+									}}>
+									<MdLogout />
+									<span>로그아웃</span>
+								</LogoutButton>
+							</ProfileUl>
+						</Profile>
+					</>
+				) : (
+					<LoginButton onClick={handleOpenModal} className="on-pc">
+						로그인
+					</LoginButton>
+				)}
+				<Hambuger className="on-mobile" onClick={handleOpenSide}>
+					{isOpenSide ? <RiMenuUnfoldLine /> : <RiMenuFoldLine />}
+				</Hambuger>
 			</HeaderStyle>
-			{isOpenModal && <LoginModal onClick={handleOpenModal} />}
+			{isOpenModal && <LoginModal handleOpenModal={handleOpenModal} />}
+			{isOpenSide && (
+				<Backdrop
+					onClick={(e) => {
+						e.preventDefault();
+						handleOpenSide();
+					}}
+				/>
+			)}
 		</>
 	);
 }
 
 export default Header;
 
-const HeaderStyle = styled.div`
-	position: relative;
+const HeaderStyle = styled.div<{ position: string }>`
+	position: ${(props) =>
+		props.position === 'relative' ? 'relative' : 'fixed'};
+	top: 0;
+	width: 100vw;
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
-	padding: 17px 300px;
+	padding: 17px 15vw;
 	background-color: ${(props) => props.theme.colors.headerBackground};
 	font-size: 18px;
+	z-index: 3333;
+
+	.on-pc {
+		display: block;
+	}
+	.on-mobile {
+		display: none;
+	}
 
 	// Tablet
 	@media screen and (max-width: 980px) {
-		padding: 20px 70px;
+		padding: 20px 80px;
 	}
 	// Mobile
 	@media screen and (max-width: 640px) {
 		padding: 20px 40px;
 		font-size: ${(props) => props.theme.fontSize.medium};
-	}
-`;
+		z-index: 6666;
 
-const Logo = styled.div`
-	img {
-		width: 110px;
-	}
-`;
-
-const Ul = styled.ul`
-	display: flex;
-	align-items: center;
-	color: ${(props) => props.theme.colors.gray400};
-
-	li {
-		padding: 10px;
-		margin: 0 20px;
-		transition: 0.1s;
-
-		&:hover {
-			color: ${(props) => props.theme.colors.white};
+		.on-pc {
+			display: none;
+		}
+		.on-mobile {
+			display: block;
 		}
 	}
 `;
 
-const SearchButton = styled.button`
-	display: flex;
-	align-items: center;
-
-	.search-icon {
-		margin-right: 15px;
+const Logo = styled.div`
+	width: 110px;
+	img {
+		width: 100%;
 	}
 `;
 
-const SearchInput = styled.input`
-	background-color: inherit;
-	border: none;
-	outline: none;
-	font-family: inherit;
-	font-size: 16.5px;
-	color: ${(props) => props.theme.colors.white};
-`;
-
-const LoginButton = styled.button`
+export const LoginButton = styled.button`
 	color: ${(props) => props.theme.colors.gray400};
 
-	&:hover {
+	:hover {
 		color: ${(props) => props.theme.colors.white};
+	}
+
+	// Mobile
+	@media screen and (max-width: 640px) {
+		color: ${(props) => props.theme.colors.gray800};
+		:hover {
+			color: ${(props) => props.theme.colors.purple};
+		}
+	}
+`;
+
+const Hambuger = styled.div`
+	color: ${(props) => props.theme.colors.gray400};
+	font-size: ${(props) => props.theme.fontSize.large};
+	transition: 0.1s;
+	cursor: pointer;
+
+	:hover {
+		color: ${(props) => props.theme.colors.white};
+	}
+`;
+
+const Profile = styled.div`
+	position: relative;
+	display: flex;
+	align-items: center;
+	color: ${(props) => props.theme.colors.gray400};
+	font-size: ${(props) => props.theme.fontSize.medium};
+	cursor: pointer;
+
+	// Mobile
+	@media screen and (max-width: 640px) {
+		position: absolute;
+		right: 68px;
+	}
+`;
+
+const Img = styled.img`
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	margin-right: 16px;
+
+	// Mobile
+	@media screen and (max-width: 640px) {
+		width: 25px;
+		height: 25px;
+		margin-right: 12px;
+	}
+`;
+
+const ProfileUl = styled.ul`
+	display: none;
+	position: absolute;
+	top: 45px;
+	left: -11px;
+	padding: 20px;
+	width: 150px;
+	background-color: ${(props) => props.theme.colors.background};
+	color: ${(props) => props.theme.colors.gray900};
+	border-radius: ${(props) => props.theme.radius.smallRadius};
+	box-shadow: 1px 1px 10px 2px rgba(30, 30, 30, 0.185);
+	z-index: 6666;
+
+	> * {
+		padding: 5px;
+
+		span {
+			margin-left: 10px;
+		}
+
+		:hover {
+			color: ${(props) => props.theme.colors.gray700};
+		}
+	}
+
+	// Mobile
+	@media screen and (max-width: 640px) {
+		top: 46px;
+		left: -52px;
+		padding: 17px;
+		width: 135px;
+		font-size: ${(props) => props.theme.fontSize.small};
+	}
+`;
+
+const Triangle = styled.div`
+	position: absolute;
+	top: -26px;
+	left: 0;
+	padding: 15px 68px 0 68px;
+	color: ${(props) => props.theme.colors.background};
+	font-size: ${(props) => props.theme.fontSize.small};
+
+	:hover {
+		color: ${(props) => props.theme.colors.background};
+	}
+
+	// Mobile
+	@media screen and (max-width: 640px) {
+		top: -24px;
+		padding: 15px 60.5px 0 60.5px;
+	}
+`;
+
+const MyPageLink = styled.div``;
+
+const LogoutButton = styled.button`
+	margin-top: 8px;
+
+	// Mobile
+	@media screen and (max-width: 640px) {
+		margin-top: 6px;
 	}
 `;

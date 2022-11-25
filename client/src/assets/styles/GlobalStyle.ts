@@ -3,6 +3,7 @@ import { createGlobalStyle } from 'styled-components';
 const GlobalStyle = createGlobalStyle`
   * {
     box-sizing: border-box;
+    /* letter-spacing: -0.01em; */
   }
 
   body {
@@ -12,6 +13,7 @@ const GlobalStyle = createGlobalStyle`
     background-color: ${(props) => props.theme.colors.background};
     font-family: 'Noto Sans KR', sans-serif;
     color: ${(props) => props.theme.colors.gray900};
+    overflow-x: hidden;
   }
 
   button {

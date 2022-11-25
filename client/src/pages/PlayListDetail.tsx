@@ -1,34 +1,44 @@
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { getPlayList } from '../api/listApi';
-import MusicList, { music } from '../components/playlist/MusicList';
+import { getPlayList } from '../api/playlistApi';
+import MusicList from '../components/playlist/MusicList';
 import PlayListInfo from '../components/playlist/PlayListInfo';
+import { musicInfoType } from './MakePlayList';
 
 export type plinfo = {
+	memberId: string;
+	playListId?: number;
 	title: string;
-	category: string;
-	author: string;
-	like: number;
-	desc: string;
-	total: number;
-	musiclist: Array<music>;
+	playlist: Array<musicInfoType>;
+	categoryList: Array<string>;
+	status: boolean;
+	like?: number;
 };
 
 export type PlayListInfoProps = {
 	playListInfo?: plinfo;
+	setPlayListInfo?: Dispatch<SetStateAction<plinfo>>;
+	plList?: Array<musicInfoType>;
+	setPlList?: Dispatch<SetStateAction<Array<musicInfoType>>>;
 };
 
 const PlayListDetail = () => {
 	const [playListInfo, setPlayListInfo] = useState<plinfo>();
-
+	const { id } = useParams();
 	useEffect(() => {
-		getPlayList().then((res) => {
-			setPlayListInfo(res);
+		getPlayList(id).then((res) => {
+			if (res.code) {
+				alert(res);
+			} else {
+				setPlayListInfo(res);
+			}
 		});
 	}, []);
 
 	const props: PlayListInfoProps = {
 		playListInfo,
+		setPlayListInfo,
 	};
 	return (
 		<PlayListDetailStyle>
@@ -45,7 +55,6 @@ const PlayListDetail = () => {
 export default PlayListDetail;
 
 const PlayListDetailStyle = styled.div`
-	margin: 3%;
 	display: flex;
 	flex-direction: column;
 `;

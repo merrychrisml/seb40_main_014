@@ -13,6 +13,13 @@ const PlaylistSection = styled.div`
 	border-radius: ${(props) => props.theme.radius.largeRadius}
 		${(props) => props.theme.radius.largeRadius} 0px 0px;
 	box-shadow: 0px 5px 5px 0px ${(props) => props.theme.colors.gray500};
+
+	@media screen and (max-width: 640px) {
+		height: 240px;
+		display: flex;
+		flex-direction: column;
+		margin-left: 20px;
+	}
 `;
 
 const ThumbnailContainer = styled.div`
@@ -22,16 +29,38 @@ const ThumbnailContainer = styled.div`
 	border-radius: ${(props) => props.theme.radius.largeRadius}
 		${(props) => props.theme.radius.largeRadius} 0px 0px;
 	height: 180px;
+	@media screen and (max-width: 640px) {
+		height: 120px;
+	}
 `;
 
 const MusicContainer = styled.div`
 	height: 180px;
 	border-bottom: 1px solid ${(props) => props.theme.colors.gray200};
 	padding: 10px;
-	overflow: auto;
+	overflow-y: scroll;
+
+	:hover {
+		::-webkit-scrollbar {
+			width: 8px;
+		}
+
+		::-webkit-scrollbar-thumb {
+			height: 30%;
+			background: ${(props) => props.theme.colors.gray300};
+			border-radius: 10px;
+		}
+
+		::-webkit-scrollbar-track {
+			background: rgba(33, 122, 244, 0.1);
+		}
+	}
 
 	.music_logo {
 		margin-right: 5px;
+	}
+	@media screen and (max-width: 640px) {
+		height: 100px;
 	}
 `;
 
@@ -40,7 +69,8 @@ const MusicElement = styled.div`
 	align-items: center;
 	margin: 5px;
 	padding-bottom: 5px;
-	white-space: nowrap;
+	/* white-space: nowrap; */
+	line-height: 16px;
 	font-size: ${(props) => props.theme.fontSize.xSmall};
 	border-bottom: solid 1px ${(props) => props.theme.colors.gray400};
 `;
